@@ -9,6 +9,16 @@ class Page3 extends StatefulWidget {
 
 class _Page3State extends State<Page3> {
   List<Map<String, Object>> currencyList = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    // Adicionando um atraso de 0.5 segundos (500 milissegundos) para simular o carregamento
+    Future.delayed(Duration(milliseconds: 500), () {
+      fetchCurrencyList();
+    });
+  }
 
   Future<void> fetchCurrencyList() async {
     final response = await http.get(
@@ -21,35 +31,19 @@ class _Page3State extends State<Page3> {
           return {
             'sigla': entry.key,
             'nome': entry.value.toString(),
-            'animation': false,
           };
         }).toList();
+        isLoading = false; // Definindo isLoading como falso após o carregamento
       });
     }
   }
-
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  Future<void> loadCurrencyNames() async {
-    await fetchCurrencyList();
-    for (var entry in currencyList) {
-      entry['animation'] = true;
-      setState(() {});
-      await Future.delayed(Duration(milliseconds: 200));
-    }
-  }
-
-// ...
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Nomes das Moedas',
+          'Nome das Moedas',
           style: TextStyle(
             color: Colors.white,
             fontSize: 24.0,
@@ -63,48 +57,35 @@ class _Page3State extends State<Page3> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          // Adicionado para centralizar na vertical
           children: [
-            ElevatedButton.icon(
-              onPressed: loadCurrencyNames,
-              icon: Icon(Icons.cloud_download),
-              label: Text('Carregar Nomes'),
-            ),
-            SizedBox(height: 16.0),
-            Expanded(
-              child: SingleChildScrollView(
-                child: DataTable(
-                  columns: [
-                    DataColumn(label: Text('Sigla')),
-                    DataColumn(label: Text('Nome da Moeda')),
-                  ],
-                  rows: currencyList.map((entry) {
-                    return DataRow(
-                      cells: [
-                        DataCell(
-                          AnimatedOpacity(
-                            opacity: entry['animation'] == true ? 1.0 : 0.0,
-                            duration: Duration(milliseconds: 200),
-                            child: Text(entry['sigla'].toString()),
-                          ),
-                        ),
-                        DataCell(
-                          AnimatedOpacity(
-                            opacity: entry['animation'] == true ? 1.0 : 0.0,
-                            duration: Duration(milliseconds: 200),
-                            child: Text(entry['nome'].toString()),
-                          ),
-                        ),
-                      ],
-                    );
-                  }).toList(),
+            // Exibindo o indicador de carregamento enquanto isLoading for verdadeiro
+            if (isLoading)
+              Container(
+                alignment: Alignment.center,
+                child: CircularProgressIndicator(),
+              )
+            else
+              Expanded(
+                child: SingleChildScrollView(
+                  child: DataTable(
+                    columns: [
+                      DataColumn(label: Text('Sigla')),
+                      DataColumn(label: Text('Nome da Moeda')),
+                    ],
+                    rows: currencyList.map((entry) {
+                      return DataRow(
+                        cells: [
+                          DataCell(Text(entry['sigla'].toString())),
+                          DataCell(Text(entry['nome'].toString())),
+                        ],
+                      );
+                    }).toList(),
+                  ),
                 ),
               ),
-            ),
           ],
         ),
       ),
     );
   }
 }
-// ...

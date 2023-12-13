@@ -7,7 +7,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Conversor de Moedas',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
@@ -17,7 +17,9 @@ class MyApp extends StatelessWidget {
           unselectedLabelStyle: TextStyle(color: Colors.black),
         ),
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const MyHomePage(),
+      // Configuração do ícone do aplicativo
+      debugShowCheckedModeBanner: false, // Oculta o banner "Debug" no modo de depuração
     );
   }
 }

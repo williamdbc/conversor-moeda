@@ -11,6 +11,7 @@ class _Page2State extends State<Page2> {
   late String selectedCurrency;
   late int selectedDays;
   List<Map<String, dynamic>> historicalData = [];
+  bool isListVisible = false;
 
   // Lista de moedas pré-definidas
   List<String> currencies = ['USD', 'BTC', 'EUR', 'JPY', 'GBP'];
@@ -38,9 +39,19 @@ class _Page2State extends State<Page2> {
             'moeda': selectedCurrency,
             'valorBRL': entry['bid'],
             'data': date,
+            'animation': false, // Adicionado para controlar a animação
           };
         }).toList();
+        isListVisible = true; // Mostra a lista gradualmente
       });
+
+      // Adicionar animação de fade-in para as linhas da tabela
+      for (var i = 0; i < historicalData.length; i++) {
+        await Future.delayed(Duration(milliseconds: 50));
+        setState(() {
+          historicalData[i]['animation'] = true;
+        });
+      }
     }
   }
 
@@ -54,101 +65,156 @@ class _Page2State extends State<Page2> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Histórico de moedas'),
+        title: Text(
+          'Histórico de Moedas',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 24.0,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.indigo,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                DropdownButton<String>(
-                  value: selectedCurrency,
-                  onChanged: (value) {
-                    setState(() {
-                      selectedCurrency = value!;
-                    });
-                  },
-                  items: currencies.map((currency) {
-                    return DropdownMenuItem<String>(
-                      value: currency,
-                      child: Text(
-                        currency,
-                        style: TextStyle(fontSize: 16.0),
-                      ),
-                    );
-                  }).toList(),
-                ),
-                DropdownButton<int>(
-                  value: selectedDays,
-                  onChanged: (value) {
-                    setState(() {
-                      selectedDays = value!;
-                    });
-                  },
-                  items: daysOptions.map((days) {
-                    return DropdownMenuItem<int>(
-                      value: days,
-                      child: Text(
-                        '$days dias',
-                        style: TextStyle(fontSize: 16.0),
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ],
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                fetchHistoricalData();
-              },
-              style: ElevatedButton.styleFrom(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10.0),
-                ),
-              ),
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10.0),
-                  gradient: LinearGradient(
-                    colors: [Colors.indigo, Colors.deepPurpleAccent],
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  DropdownButton<String>(
+                    value: selectedCurrency,
+                    onChanged: (value) {
+                      setState(() {
+                        selectedCurrency = value!;
+                      });
+                    },
+                    items: currencies.map((currency) {
+                      return DropdownMenuItem<String>(
+                        value: currency,
+                        child: Text(
+                          currency,
+                          style: TextStyle(fontSize: 16.0),
+                        ),
+                      );
+                    }).toList(),
                   ),
+                  DropdownButton<int>(
+                    value: selectedDays,
+                    onChanged: (value) {
+                      setState(() {
+                        selectedDays = value!;
+                      });
+                    },
+                    items: daysOptions.map((days) {
+                      return DropdownMenuItem<int>(
+                        value: days,
+                        child: Text(
+                          '$days dias',
+                          style: TextStyle(fontSize: 16.0),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ],
+              ),
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () async {
+                  // Chamar a função para buscar os dados
+                  await fetchHistoricalData();
+                },
+                style: ElevatedButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+                  padding: EdgeInsets.zero,
                 ),
-                padding: EdgeInsets.symmetric(vertical: 15.0),
-                child: Center(
-                  child: Text(
-                    'Exibir Histórico',
-                    style: TextStyle(
-                      fontSize: 18.0,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
+                child: Ink(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Colors.indigo, Colors.deepPurpleAccent],
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                    ),
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+                  padding: EdgeInsets.symmetric(vertical: 15.0),
+                  child: Center(
+                    child: Text(
+                      'Exibir Histórico',
+                      style: TextStyle(
+                        fontSize: 18.0,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-            SizedBox(height: 20),
-            DataTable(
-              columns: [
-                DataColumn(label: Text('Moeda')),
-                DataColumn(label: Text('Valor (BRL)')),
-                DataColumn(label: Text('Data')),
-              ],
-              rows: historicalData.map((entry) {
-                return DataRow(cells: [
-                  DataCell(Text(entry['moeda'].toString())),
-                  DataCell(Text(entry['valorBRL'].toString())),
-                  DataCell(Text(entry['data'].toString())),
-                ]);
-              }).toList(),
-            ),
-          ],
+              SizedBox(height: 20),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: DataTable(
+                  dataRowHeight: 50, // Altura fixa para as linhas
+                  columns: [
+                    DataColumn(label: Text('Moeda')),
+                    DataColumn(label: Text('Valor (BRL)')),
+                    DataColumn(label: Text('Data')),
+                  ],
+                  rows: historicalData.map((entry) {
+                    return DataRow(
+                      cells: [
+                        DataCell(
+                          AnimatedOpacity(
+                            opacity: entry['animation'] ? 1.0 : 0.0,
+                            duration: Duration(milliseconds: 500),
+                            child: Text(
+                              entry['moeda'].toString(),
+                              style: TextStyle(
+                                color: Colors.black, // Cor do texto
+                                fontWeight: FontWeight.bold, // Negrito
+                              ),
+                            ),
+                          ),
+                        ),
+                        DataCell(
+                          AnimatedOpacity(
+                            opacity: entry['animation'] ? 1.0 : 0.0,
+                            duration: Duration(milliseconds: 500),
+                            child: Text(
+                              entry['valorBRL'].toString(),
+                              style: TextStyle(
+                                color: Colors.black, // Cor do texto
+                                fontWeight: FontWeight.bold, // Negrito
+                              ),
+                            ),
+                          ),
+                        ),
+                        DataCell(
+                          AnimatedOpacity(
+                            opacity: entry['animation'] ? 1.0 : 0.0,
+                            duration: Duration(milliseconds: 500),
+                            child: Text(
+                              entry['data'].toString(),
+                              style: TextStyle(
+                                color: Colors.black, // Cor do texto
+                                fontWeight: FontWeight.bold, // Negrito
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  }).toList(),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
